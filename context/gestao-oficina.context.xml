@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature name="gestao-oficina-mvp" version="1.0" status="fundacao">
+  
+  <resumo>
+    Sistema de Gestão de Oficina - MVP em desenvolvimento.
+    Prisma configurado, auth funcionando, estrutura de pastas ok.
+    Próximo: criar componentes UI e sidebar.
+  </resumo>
+  
+  <arquivos_principais>
+    <arquivo path="prisma/schema.prisma">Schema completo com todas as tabelas</arquivo>
+    <arquivo path="src/lib/supabase/client.ts">Supabase client-side</arquivo>
+    <arquivo path="src/lib/supabase/server.ts">Supabase server-side</arquivo>
+    <arquivo path="src/app/(auth)/login/page.tsx">Página de login</arquivo>
+    <arquivo path="src/app/(dashboard)/dashboard/page.tsx">Dashboard</arquivo>
+    <arquivo path="src/components/ui/button.tsx">Componente Button</arquivo>
+    <arquivo path="middleware.ts">Proteção de rotas</arquivo>
+  </arquivos_principais>
+  
+  <componentes_faltantes>
+    <componente>Input</componente>
+    <componente>Label</componente>
+    <componente>Card (CardHeader, CardTitle, CardDescription, CardContent)</componente>
+    <componente>Sidebar</componente>
+    <componente>DataTable (para listas)</componente>
+  </componentes_faltantes>
+  
+  <armadilhas>
+    <armadilha severidade="alta">
+      <problema>Schema duplicado</problema>
+      <solucao>Manter apenas prisma/schema.prisma (deletar src/prisma/)</solucao>
+    </armadilha>
+    <armadilha severidade="alta">
+      <problema>Versões incompatíveis Prisma</problema>
+      <solucao>Sempre usar mesma versão em prisma e @prisma/client</solucao>
+    </armadilha>
+    <armadilha severidade="media">
+      <problema>Prisma Client sem singleton</problema>
+      <solucao>Criar lib/prisma.ts com singleton pattern</solucao>
+    </armadilha>
+  </armadilhas>
+
+  <ultimaSessao data="2026-04-06">
+    <contexto>
+      Modernizamos o visual para Apple-like:
+      - Fonte Inter configurada
+      - Cores Azul Apple (primary: #0071e3)
+      - Cards com cantos arredondados (rounded-2xl)
+      - Inputs com bg zinco claro
+      - Botões pretos com hover zinco
+      - Backgrounds neutros zinco
+      - Sidebar mais clean
+      - Build passou com sucesso.
+    </contexto>
+    <arquivosModificados>
+      <arquivo>src/app/layout.tsx (fonte Inter)</arquivo>
+      <arquivo>src/app/globals.css (cores Apple-like)</arquivo>
+      <arquivo>src/components/ui/card.tsx (rounded-2xl)</arquivo>
+      <arquivo>src/app/(auth)/login/page.tsx (novo visual)</arquivo>
+      <arquivo>src/app/(auth)/signup/page.tsx (novo visual)</arquivo>
+      <arquivo>src/components/layout/sidebar.tsx (visual clean)</arquivo>
+      <arquivo>src/app/(dashboard)/dashboard/page.tsx (cards modernizados)</arquivo>
+      <arquivo>src/app/(dashboard)/layout.tsx (bg zinco)</arquivo>
+    </arquivosModificados>
+    <proximosPassos>
+      <passo prioridade="1">Criar página de Clientes (CRUD)</passo>
+      <passo prioridade="2">Criar página de Veículos</passo>
+      <passo prioridade="3">Criar página de Ordem de Serviço</passo>
+    </proximosPassos>
+  </ultimaSessao>
+
+</feature>
