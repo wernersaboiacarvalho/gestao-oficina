@@ -371,6 +371,7 @@ export function ServiceOrdersList({ initialOrders, vehicles, mechanics, thirdPar
                 <PrintPreview 
                     order={printingOrder} 
                     type={printingOrder.status === "ORCAMENTO" ? "ORCAMENTO" : "OS"} 
+                    onClose={() => setPrintingOrder(null)}
                 />
             )}
         </>

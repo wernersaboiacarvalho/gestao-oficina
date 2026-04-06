@@ -61,6 +61,7 @@ export async function getOSByStatus() {
     })
 
     const byStatus: Record<string, { count: number; amount: number }> = {
+        ORCAMENTO: { count: 0, amount: 0 },
         OPEN: { count: 0, amount: 0 },
         IN_PROGRESS: { count: 0, amount: 0 },
         WAITING_PARTS_THIRD_PARTY: { count: 0, amount: 0 },

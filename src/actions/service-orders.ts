@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
+type OSStatusType = "ORCAMENTO" | "OPEN" | "IN_PROGRESS" | "WAITING_PARTS_THIRD_PARTY" | "DONE" | "BILLED" | "CANCELLED"
+
 export async function getServiceOrders() {
     const orders = await prisma.serviceOrder.findMany({
         include: {
@@ -96,6 +98,9 @@ export async function createServiceOrder(data: {
         },
     })
 
+    revalidatePath("/os")
+    revalidatePath("/dashboard")
+
     return {
         ...order,
         totalAmount: Number(order.totalAmount),
@@ -111,7 +116,7 @@ export async function createServiceOrder(data: {
 
 export async function updateServiceOrder(id: string, data: {
     vehicleId: string
-    status: "OPEN" | "IN_PROGRESS" | "WAITING_PARTS_THIRD_PARTY" | "DONE" | "BILLED" | "CANCELLED"
+    status: OSStatusType
     description: string
     isOutsourced: boolean
     thirdPartyId?: string
@@ -152,6 +157,9 @@ export async function updateServiceOrder(id: string, data: {
         },
     })
 
+    revalidatePath("/os")
+    revalidatePath("/dashboard")
+
     return {
         ...order,
         totalAmount: Number(order.totalAmount),
@@ -165,17 +173,21 @@ export async function updateServiceOrder(id: string, data: {
     }
 }
 
-export async function updateServiceOrderStatus(id: string, status: "OPEN" | "IN_PROGRESS" | "WAITING_PARTS_THIRD_PARTY" | "DONE" | "BILLED" | "CANCELLED") {
+export async function updateServiceOrderStatus(id: string, status: OSStatusType) {
     await prisma.serviceOrder.update({
         where: { id },
         data: { status },
     })
+    revalidatePath("/os")
+    revalidatePath("/dashboard")
 }
 
 export async function deleteServiceOrder(id: string) {
     await prisma.serviceOrder.delete({
         where: { id },
     })
+    revalidatePath("/os")
+    revalidatePath("/dashboard")
 }
 
 export async function getMechanics() {

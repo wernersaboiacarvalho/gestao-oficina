@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { revalidatePath } from "next/cache"
 
 export async function getProducts() {
     const products = await prisma.product.findMany({
@@ -41,6 +42,7 @@ export async function createProduct(data: {
             salePrice: data.salePrice,
         },
     })
+    revalidatePath("/estoque")
     return {
         ...product,
         costPrice: Number(product.costPrice),
@@ -65,6 +67,7 @@ export async function updateProduct(id: string, data: {
             salePrice: data.salePrice,
         },
     })
+    revalidatePath("/estoque")
     return {
         ...product,
         costPrice: Number(product.costPrice),
@@ -76,6 +79,7 @@ export async function deleteProduct(id: string) {
     const product = await prisma.product.delete({
         where: { id },
     })
+    revalidatePath("/estoque")
     return {
         ...product,
         costPrice: Number(product.costPrice),

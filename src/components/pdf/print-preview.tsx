@@ -25,9 +25,10 @@ interface ServiceOrder {
 interface Props {
     order: ServiceOrder
     type: "OS" | "ORCAMENTO"
+    onClose: () => void
 }
 
-export function PrintPreview({ order, type }: Props) {
+export function PrintPreview({ order, type, onClose }: Props) {
     const formatCurrency = (value: number) => {
         return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
     }
@@ -61,7 +62,7 @@ export function PrintPreview({ order, type }: Props) {
                             Imprimir / Salvar PDF
                         </button>
                         <button
-                            onClick={() => window.close()}
+                            onClick={onClose}
                             className="px-4 py-2 border rounded-lg hover:bg-zinc-50 text-sm"
                         >
                             Fechar

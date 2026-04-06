@@ -12,8 +12,6 @@ export default async function OSPage() {
 
     const orders = ordersRaw.map((o: any) => ({
         ...o,
-        createdAt: o.createdAt.toISOString(),
-        totalAmount: Number(o.totalAmount),
         vehicle: {
             ...o.vehicle,
             customer: { id: o.vehicle.customer.id, name: o.vehicle.customer.name },

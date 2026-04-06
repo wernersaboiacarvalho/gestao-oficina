@@ -14,7 +14,6 @@ export default async function RelatoriosPage() {
     const allOrders = allOrdersRaw.map((o: any) => ({
         ...o,
         totalAmount: Number(o.totalAmount),
-        createdAt: o.createdAt.toISOString(),
     }))
 
     const products = productsRaw.map((p: any) => ({
