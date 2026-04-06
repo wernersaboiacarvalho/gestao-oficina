@@ -1,13 +1,169 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ==========================================
+// PERFIS E AUTENTICAÇÃO
+// ==========================================
+
+enum Role {
+  ADMIN
+  MECHANIC
+  USER
+}
+
+model Profile {
+  id       String  @id // UUID do Supabase Auth
+  name     String
+  role     Role    @default(MECHANIC)
+  isActive Boolean @default(true)
+
+  serviceOrders ServiceOrderMechanic[]
+
+  @@map("profiles")
+}
+
+// ==========================================
+// CLIENTES E VEÍCULOS
+// ==========================================
+
+model Customer {
+  id       String    @id @default(cuid())
+  name     String
+  phone    String
+  email    String?
+  document String? // CPF ou CNPJ
+  birthday DateTime?
+
+  vehicles Vehicle[]
+
+  @@map("customers")
+}
+
+model Vehicle {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  plate      String
+  model      String
+  brand      String
+  year       Int?
+  color      String?
+  km         Int?
+
+  serviceOrders ServiceOrder[]
+
+  @@map("vehicles")
+}
+
+// ==========================================
+// ORDEM DE SERVIÇO (O CORAÇÃO DO SISTEMA)
+// ==========================================
+
+enum OSStatus {
+  ORCAMENTO
+  OPEN
+  IN_PROGRESS
+  WAITING_PARTS_THIRD_PARTY
+  DONE
+  BILLED
+  CANCELLED
+}
+
+enum ItemType {
+  PART
+  SERVICE
+}
+
+model ServiceOrder {
+  id           String      @id @default(cuid())
+  vehicleId    String
+  vehicle      Vehicle     @relation(fields: [vehicleId], references: [id])
+  status       OSStatus    @default(OPEN)
+  description  String // Sintoma relatado pelo cliente
+  isOutsourced Boolean     @default(false)
+  thirdPartyId String?
+  thirdParty   ThirdParty? @relation(fields: [thirdPartyId], references: [id])
+  totalAmount  Decimal     @default(0) @db.Decimal(10, 2)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  mechanics ServiceOrderMechanic[]
+  items     ServiceOrderItem[]
+  medias    Media[]
+
+  @@map("service_orders")
+}
+
+model ServiceOrderMechanic {
+  id             String       @id @default(cuid())
+  serviceOrderId String
+  serviceOrder   ServiceOrder @relation(fields: [serviceOrderId], references: [id], onDelete: Cascade)
+  mechanicId     String
+  mechanic       Profile      @relation(fields: [mechanicId], references: [id])
+
+  @@map("service_order_mechanics")
+}
+
+model ServiceOrderItem {
+  id             String       @id @default(cuid())
+  serviceOrderId String
+  serviceOrder   ServiceOrder @relation(fields: [serviceOrderId], references: [id], onDelete: Cascade)
+  type           ItemType
+  productId      String?
+  product        Product?     @relation(fields: [productId], references: [id])
+  description    String
+  quantity       Decimal      @default(1) @db.Decimal(10, 2)
+  unitPrice      Decimal      @db.Decimal(10, 2)
+
+  @@map("service_order_items")
+}
+
+// ==========================================
+// ESTOQUE E TERCEIROS
+// ==========================================
+
+model ThirdParty {
+  id          String  @id @default(cuid())
+  name        String
+  phone       String?
+  cnpj        String?
+  serviceType String?
+
+  serviceOrders ServiceOrder[]
+
+  @@map("third_parties")
+}
+
+model Product {
+  id            String  @id @default(cuid())
+  name          String
+  code          String?
+  stockQuantity Int     @default(0)
+  costPrice     Decimal @db.Decimal(10, 2)
+  salePrice     Decimal @db.Decimal(10, 2)
+
+  serviceOrderItems ServiceOrderItem[]
+
+  @@map("products")
+}
+
+// ==========================================
+// MÍDIA (CLOUDINARY FUTURO)
+// ==========================================
+
+model Media {
+  id             String        @id @default(cuid())
+  serviceOrderId String?
+  serviceOrder   ServiceOrder? @relation(fields: [serviceOrderId], references: [id], onDelete: SetNull)
+  url            String
+  type           String        @default("IMAGE")
+
+  @@map("medias")
 }

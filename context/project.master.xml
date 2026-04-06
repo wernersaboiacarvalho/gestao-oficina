@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project 
+  name="GestaoOficina" 
+  version="1.0"
+  lastUpdated="2025-02-16"
+>
+
+  <!-- ============================================
+       VISÃO GERAL
+       ============================================ -->
+  <overview>
+    <description>
+      Sistema de gestão para oficinas mecânicas com foco em controle de OS,
+      gestão de terceiros, financeiro confiável e UX simplificada.
+    </description>
+    <businessModel>
+      Cliente possui oficina e sofre com sistema atual que não integra terceiros,
+      tem relatórios não confiáveis, não permite editar OS e tem UX ruim.
+      Werner desenvolve solução completa com Next.js + Supabase.
+    </businessModel>
+    <owners>
+      <owner name="Werner Saboia" role="Desenvolvedor"/>
+      <owner name="Dono da Oficina" role="Cliente"/>
+    </owners>
+  </overview>
+
+  <!-- ============================================
+       ARQUITETURA
+       ============================================ -->
+  <architecture>
+    <stack>
+      <frontend>Next.js 16, React 19, TypeScript, Tailwind, shadcn/ui (Radix Nova)</frontend>
+      <backend>Next.js Server Actions, Prisma ORM</backend>
+      <database>PostgreSQL (Supabase)</database>
+      <auth>Supabase Auth</auth>
+      <storage>Cloudinary (futuro)</storage>
+      <notifications>WhatsApp API (futuro)</notifications>
+      <deploy>Vercel</deploy>
+    </stack>
+
+    <folderStructure>
+      <folder path="app/(auth)">Login, signup</folder>
+      <folder path="app/(dashboard)">Dashboard principal</folder>
+      <folder path="app/(dashboard)/clientes">CRUD de clientes</folder>
+      <folder path="app/(dashboard)/veiculos">CRUD de veículos</folder>
+      <folder path="app/(dashboard)/os">Ordens de Serviço</folder>
+      <folder path="app/(dashboard)/terceiros">CRUD de terceiros</folder>
+      <folder path="app/(dashboard)/estoque">Produtos</folder>
+      <folder path="app/(dashboard)/relatorios">Relatórios</folder>
+      <folder path="actions">Server Actions por feature</folder>
+      <folder path="components">Componentes React por feature</folder>
+      <folder path="lib">Utilitários, prisma, supabase</folder>
+      <folder path="hooks">Custom hooks</folder>
+      <folder path="types">TypeScript types</folder>
+      <folder path="prisma">Schema e migrations</folder>
+    </folderStructure>
+  </architecture>
+
+  <!-- ============================================
+       FEATURES E STATUS
+       ============================================ -->
+  <features>
+    <feature name="auth" status="completo" version="1.0">
+      <description>Login, signup via Supabase</description>
+      <routes>
+        <route path="/login">Login</route>
+      </routes>
+    </feature>
+
+    <feature name="profiles" status="pendente" version="0.0">
+      <description>Gestão de perfis (ADMIN, MECHANIC, USER)</description>
+      <pendente>Criar CRUD de profiles</pendente>
+    </feature>
+
+    <feature name="customers" status="pendente" version="0.0">
+      <description>CRUD de clientes</description>
+      <pendente>Criar tela de clientes</pendente>
+    </feature>
+
+    <feature name="vehicles" status="pendente" version="0.0">
+      <description>CRUD de veículos vinculados a clientes</description>
+      <pendente>Criar tela de veículos</pendente>
+    </feature>
+
+    <feature name="service-orders" status="pendente" version="0.0">
+      <description>Ordem de Serviço - CORAÇÃO DO SISTEMA</description>
+      <capabilities>
+        <item>Múltiplos mecânicos desde o início</item>
+        <item>Items (peças + serviços) inline</item>
+        <item>Edição sem precisar excluir</item>
+        <item>Terceirização integrada</item>
+        <item>Status detalhado (OPEN, IN_PROGRESS, WAITING_PARTS_THIRD_PARTY, DONE, BILLED, CANCELLED)</item>
+      </capabilities>
+      <pendente>Criar fluxo completo de OS</pendente>
+    </feature>
+
+    <feature name="third-parties" status="pendente" version="0.0">
+      <description>CRUD de terceiros (DOR #1)</description>
+      <pendente>Criar gestão de terceiros</pendente>
+    </feature>
+
+    <feature name="products" status="pendente" version="0.0">
+      <description>Estoque de produtos/peças</description>
+      <pendente>Criar CRUD de produtos</pendente>
+    </feature>
+
+    <feature name="financial" status="pendente" version="0.0">
+      <description>Controle financeiro (DOR #2)</description>
+      <capabilities>
+        <item>Dashboard com totais confiáveis</item>
+        <item>OS não faturadas</item>
+        <item>Fluxo de caixa</item>
+      </capabilities>
+      <pendente>Implementar após OS estar pronta</pendente>
+    </feature>
+
+    <feature name="media" status="futuro" version="0.0">
+      <description>Upload de imagens (Cloudinary)</description>
+      <pendente>Integração futura</pendente>
+    </feature>
+
+    <feature name="whatsapp" status="futuro" version="0.0">
+      <description>Notificações WhatsApp</description>
+      <pendente>Integração futura</pendente>
+    </feature>
+
+    <feature name="pos-venda" status="futuro" version="0.0">
+      <description>Aniversários, lembretes de manutenção</description>
+      <pendente>Implementar após MVP</pendente>
+    </feature>
+
+    <feature name="ocr" status="futuro" version="0.0">
+      <description>Leitura de NF-e</description>
+      <pendente>Implementar após MVP</pendente>
+    </feature>
+  </features>
+
+  <!-- ============================================
+       BANCO DE DADOS
+       ============================================ -->
+  <database>
+    <schema>
+      <!-- Auth & Users -->
+      <table name="Profile">
+        <field name="id" type="String" pk="true">UUID do Supabase Auth</field>
+        <field name="name" type="String"/>
+        <field name="role" type="Role" default="MECHANIC">ADMIN | MECHANIC | USER</field>
+        <field name="isActive" type="Boolean" default="true"/>
+        <relations>serviceOrders (via ServiceOrderMechanic)</relations>
+      </table>
+
+      <!-- Clientes & Veículos -->
+      <table name="Customer">
+        <field name="id" type="String" pk="true"/>
+        <field name="name" type="String"/>
+        <field name="phone" type="String"/>
+        <field name="email" type="String?"/>
+        <field name="document" type="String?">CPF ou CNPJ</field>
+        <field name="birthday" type="DateTime?"/>
+        <relations>vehicles</relations>
+      </table>
+
+      <table name="Vehicle">
+        <field name="id" type="String" pk="true"/>
+        <field name="customerId" type="String" fk="Customer"/>
+        <field name="plate" type="String"/>
+        <field name="model" type="String"/>
+        <field name="brand" type="String"/>
+        <field name="year" type="Int?"/>
+        <field name="color" type="String?"/>
+        <field name="km" type="Int?"/>
+        <relations>serviceOrders</relations>
+      </table>
+
+      <!-- Ordem de Serviço -->
+      <table name="ServiceOrder">
+        <field name="id" type="String" pk="true"/>
+        <field name="vehicleId" type="String" fk="Vehicle"/>
+        <field name="status" type="OSStatus" default="OPEN"/>
+        <field name="description" type="String">Sintoma relatado</field>
+        <field name="isOutsourced" type="Boolean" default="false">Se é terceirizado</field>
+        <field name="thirdPartyId" type="String?" fk="ThirdParty"/>
+        <field name="totalAmount" type="Decimal" default="0"/>
+        <field name="createdAt" type="DateTime"/>
+        <field name="updatedAt" type="DateTime"/>
+        <relations>mechanics, items, medias</relations>
+      </table>
+
+      <table name="ServiceOrderMechanic">
+        <field name="id" type="String" pk="true"/>
+        <field name="serviceOrderId" type="String" fk="ServiceOrder"/>
+        <field name="mechanicId" type="String" fk="Profile"/>
+        <note>Permite múltiplos mecânicos por OS</note>
+      </table>
+
+      <table name="ServiceOrderItem">
+        <field name="id" type="String" pk="true"/>
+        <field name="serviceOrderId" type="String" fk="ServiceOrder"/>
+        <field name="type" type="ItemType">PART | SERVICE</field>
+        <field name="productId" type="String?" fk="Product"/>
+        <field name="description" type="String"/>
+        <field name="quantity" type="Decimal"/>
+        <field name="unitPrice" type="Decimal"/>
+      </table>
+
+      <!-- Terceiros -->
+      <table name="ThirdParty">
+        <field name="id" type="String" pk="true"/>
+        <field name="name" type="String"/>
+        <field name="phone" type="String?"/>
+        <field name="cnpj" type="String?"/>
+        <field name="serviceType" type="String?"/>
+        <relations>serviceOrders</relations>
+      </table>
+
+      <!-- Estoque -->
+      <table name="Product">
+        <field name="id" type="String" pk="true"/>
+        <field name="name" type="String"/>
+        <field name="code" type="String?"/>
+        <field name="stockQuantity" type="Int" default="0"/>
+        <field name="costPrice" type="Decimal"/>
+        <field name="salePrice" type="Decimal"/>
+        <relations>serviceOrderItems</relations>
+      </table>
+
+      <!-- Mídia -->
+      <table name="Media">
+        <field name="id" type="String" pk="true"/>
+        <field name="serviceOrderId" type="String?" fk="ServiceOrder"/>
+        <field name="url" type="String"/>
+        <field name="type" type="String" default="IMAGE"/>
+      </table>
+    </schema>
+
+    <enums>
+      <enum name="Role">ADMIN, MECHANIC, USER</enum>
+      <enum name="OSStatus">OPEN, IN_PROGRESS, WAITING_PARTS_THIRD_PARTY, DONE, BILLED, CANCELLED</enum>
+      <enum name="ItemType">PART, SERVICE</enum>
+    </enums>
+  </database>
+
+  <!-- ============================================
+       COMPONENTES PRINCIPAIS
+       ============================================ -->
+  <components>
+    <section name="Layout">
+      <component path="components/layout/sidebar.tsx">Sidebar com navegação</component>
+      <component path="components/layout/header.tsx">Header do dashboard</component>
+    </section>
+
+    <section name="Auth">
+      <component path="app/(auth)/login/page.tsx">Página de login</component>
+    </section>
+
+    <section name="Dashboard">
+      <component path="app/(dashboard)/dashboard/page.tsx">Dashboard com cards de métricas</component>
+    </section>
+  </components>
+
+  <!-- ============================================
+       PROBLEMAS CONHECIDOS E SOLUÇÕES
+       ============================================ -->
+  <troubleshooting>
+    <category name="Build/Deploy">
+      <problem>
+        <description>Erro com schema duplicado</description>
+        <cause>Dois arquivos schema.prisma (prisma/ e src/prisma/)</cause>
+        <solution>Deletar src/prisma/schema.prisma, usar apenas prisma/</solution>
+      </problem>
+      <problem>
+        <description>Incompatibilidade de versões Prisma</description>
+        <cause>@prisma/client e prisma em versões diferentes</cause>
+        <solution>Sempre manter mesma versão (ex: ambos em 5.22.0)</solution>
+      </problem>
+    </category>
+
+    <category name="Serialização">
+      <problem>
+        <description>Erro ao passar Decimal para Client</description>
+        <cause>Decimal do Prisma não é Number</cause>
+        <solution>Number(value)</solution>
+      </problem>
+      <problem>
+        <description>Erro ao passar Date para Client</description>
+        <cause>Date não serializa</cause>
+        <solution>.toISOString()</solution>
+      </problem>
+    </category>
+  </troubleshooting>
+
+  <!-- ============================================
+       PRÓXIMOS PASSOS GLOBAIS
+       ============================================ -->
+  <roadmap>
+    <milestone name="v1.0 - Fundação" status="em_andamento">
+      <task status="completo">Configurar Prisma Client singleton</task>
+      <task status="pendente">Adicionar componentes UI faltantes</task>
+      <task status="pendente">Criar sidebar com navegação</task>
+      <task status="pendente">Ajustar rotas (redirecionar / para /dashboard)</task>
+    </milestone>
+    <milestone name="v2.0 - CRUD Básico" status="pendente">
+      <task>Clientes (cadastro simplificado)</task>
+      <task>Veículos</task>
+      <task>OS COMPLETA (múltiplos mecânicos, edição, poucos cliques)</task>
+    </milestone>
+    <milestone name="v3.0 - Terceiros" status="pendente">
+      <task>CRUD de Terceiros</task>
+      <task>Vincular OS a terceiros</task>
+      <task>Relatório de terceiros</task>
+    </milestone>
+    <milestone name="v4.0 - Financeiro" status="pendente">
+      <task>Dashboard com totais reais</task>
+      <task>Controle de BILLED vs DONE</task>
+      <task>Relatório de OS não faturadas</task>
+    </milestone>
+    <milestone name="v5.0 - Features Avançadas" status="futuro">
+      <task>Cloudinary para imagens</task>
+      <task>WhatsApp Integration</task>
+      <task>Pós-venda</task>
+      <task>OCR de NF-e</task>
+    </milestone>
+  </roadmap>
+
+</project>
