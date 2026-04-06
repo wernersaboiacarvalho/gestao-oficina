@@ -4,16 +4,28 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
 export async function getCustomers() {
-    return prisma.customer.findMany({
+    const customers = await prisma.customer.findMany({
         orderBy: { name: "asc" },
     })
+    return customers.map((c: any) => ({
+        ...c,
+        birthday: c.birthday ? c.birthday.toISOString() : null,
+    }))
 }
 
 export async function getCustomer(id: string) {
-    return prisma.customer.findUnique({
+    const customer = await prisma.customer.findUnique({
         where: { id },
         include: { vehicles: true },
     })
+    if (!customer) return null
+    return {
+        ...customer,
+        birthday: customer.birthday ? customer.birthday.toISOString() : null,
+        vehicles: customer.vehicles.map((v: any) => ({
+            ...v,
+        })),
+    }
 }
 
 export async function createCustomer(data: {
@@ -23,7 +35,7 @@ export async function createCustomer(data: {
     document?: string
     birthday?: string
 }) {
-    return prisma.customer.create({
+    const customer = await prisma.customer.create({
         data: {
             name: data.name,
             phone: data.phone,
@@ -32,6 +44,10 @@ export async function createCustomer(data: {
             birthday: data.birthday ? new Date(data.birthday) : null,
         },
     })
+    return {
+        ...customer,
+        birthday: customer.birthday ? customer.birthday.toISOString() : null,
+    }
 }
 
 export async function updateCustomer(id: string, data: {
@@ -41,7 +57,7 @@ export async function updateCustomer(id: string, data: {
     document?: string
     birthday?: string
 }) {
-    return prisma.customer.update({
+    const customer = await prisma.customer.update({
         where: { id },
         data: {
             name: data.name,
@@ -51,16 +67,20 @@ export async function updateCustomer(id: string, data: {
             birthday: data.birthday ? new Date(data.birthday) : null,
         },
     })
+    return {
+        ...customer,
+        birthday: customer.birthday ? customer.birthday.toISOString() : null,
+    }
 }
 
 export async function deleteCustomer(id: string) {
-    return prisma.customer.delete({
+    return await prisma.customer.delete({
         where: { id },
     })
 }
 
 export async function searchCustomers(query: string) {
-    return prisma.customer.findMany({
+    const customers = await prisma.customer.findMany({
         where: {
             OR: [
                 { name: { contains: query, mode: "insensitive" } },
@@ -70,4 +90,8 @@ export async function searchCustomers(query: string) {
         },
         take: 10,
     })
+    return customers.map((c: any) => ({
+        ...c,
+        birthday: c.birthday ? c.birthday.toISOString() : null,
+    }))
 }

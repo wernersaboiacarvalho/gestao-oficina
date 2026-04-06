@@ -3,13 +3,13 @@
 import { prisma } from "@/lib/prisma"
 
 export async function getThirdParties() {
-    return prisma.thirdParty.findMany({
+    return await prisma.thirdParty.findMany({
         orderBy: { name: "asc" },
     })
 }
 
 export async function getThirdParty(id: string) {
-    return prisma.thirdParty.findUnique({
+    return await prisma.thirdParty.findUnique({
         where: { id },
     })
 }
@@ -20,7 +20,7 @@ export async function createThirdParty(data: {
     cnpj?: string
     serviceType?: string
 }) {
-    return prisma.thirdParty.create({
+    return await prisma.thirdParty.create({
         data: {
             name: data.name,
             phone: data.phone || null,
@@ -36,7 +36,7 @@ export async function updateThirdParty(id: string, data: {
     cnpj?: string
     serviceType?: string
 }) {
-    return prisma.thirdParty.update({
+    return await prisma.thirdParty.update({
         where: { id },
         data: {
             name: data.name,
@@ -48,7 +48,7 @@ export async function updateThirdParty(id: string, data: {
 }
 
 export async function deleteThirdParty(id: string) {
-    return prisma.thirdParty.delete({
+    await prisma.thirdParty.delete({
         where: { id },
     })
 }

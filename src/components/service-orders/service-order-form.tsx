@@ -103,18 +103,28 @@ export function ServiceOrderForm({ initialData, vehicles, mechanics, thirdPartie
     }
 
     const updateItem = (index: number, field: keyof ServiceOrderItem, value: any) => {
-        const newItems = [...items]
-        newItems[index] = { ...newItems[index], [field]: value }
-        setItems(newItems)
+        setItems(prev => {
+            const newItems = [...prev]
+            newItems[index] = { ...newItems[index], [field]: value }
+            return newItems
+        })
     }
 
     const handleProductChange = (index: number, productId: string) => {
         const product = products.find(p => p.id === productId)
         if (product) {
-            updateItem(index, "productId", product.id)
-            updateItem(index, "description", product.name)
-            updateItem(index, "unitPrice", product.salePrice)
-            updateItem(index, "quantity", 1)
+            setItems(prev => {
+                const newItems = [...prev]
+                newItems[index] = {
+                    ...newItems[index],
+                    type: "PART" as const,
+                    productId: product.id,
+                    description: product.name,
+                    unitPrice: product.salePrice,
+                    quantity: 1,
+                }
+                return newItems
+            })
         }
     }
 
@@ -245,68 +255,96 @@ export function ServiceOrderForm({ initialData, vehicles, mechanics, thirdPartie
                 </div>
 
                 {items.map((item: ServiceOrderItem, index: number) => (
-                    <div key={index} className="flex gap-2 items-start p-3 bg-zinc-50 rounded-xl">
-                        <select
-                            value={item.type}
-                            onChange={(e) => {
-                                updateItem(index, "type", e.target.value)
-                                if (e.target.value === "SERVICE") {
-                                    updateItem(index, "description", "")
-                                    updateItem(index, "productId", undefined)
-                                }
-                            }}
-                            className="h-8 w-20 rounded-lg border border-zinc-200 bg-white px-2 text-xs"
-                        >
-                            <option value="SERVICE">Serviço</option>
-                            <option value="PART">Peça</option>
-                        </select>
-                        
-                        {item.type === "PART" ? (
+                    <div key={index} className="flex flex-col gap-2 p-3 bg-zinc-50 rounded-xl">
+                        <div className="flex gap-2 items-center">
                             <select
-                                value={item.productId || ""}
-                                onChange={(e) => handleProductChange(index, e.target.value)}
-                                className="h-8 flex-1 rounded-lg border border-zinc-200 bg-white px-2 text-sm"
+                                value={item.type}
+                                onChange={(e) => {
+                                    updateItem(index, "type", e.target.value)
+                                    if (e.target.value === "SERVICE") {
+                                        updateItem(index, "description", "")
+                                        updateItem(index, "productId", undefined)
+                                    }
+                                }}
+                                className="h-8 w-24 rounded-lg border border-zinc-200 bg-white px-2 text-xs font-medium"
                             >
-                                <option value="">Selecione uma peça...</option>
-                                {products.map((p) => (
-                                    <option key={p.id} value={p.id}>
-                                        {p.name} - R$ {p.salePrice.toFixed(2).replace(".", ",")} ({p.stockQuantity} und)
-                                    </option>
-                                ))}
+                                <option value="SERVICE">Serviço</option>
+                                <option value="PART">Peça</option>
                             </select>
-                        ) : (
-                            <Input
-                                value={item.description}
-                                onChange={(e) => updateItem(index, "description", e.target.value)}
-                                placeholder="Descrição do serviço"
-                                className="h-8 flex-1 rounded-lg bg-white border-zinc-200 text-sm"
-                            />
-                        )}
+                            
+                            {item.type === "PART" ? (
+                                <select
+                                    value={item.productId || ""}
+                                    onChange={(e) => handleProductChange(index, e.target.value)}
+                                    className="h-8 flex-1 rounded-lg border border-zinc-200 bg-white px-2 text-sm"
+                                >
+                                    <option value="">Selecione uma peça...</option>
+                                    {products.map((p) => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.name} - R$ {p.salePrice.toFixed(2).replace(".", ",")} ({p.stockQuantity} und)
+                                        </option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <Input
+                                    value={item.description}
+                                    onChange={(e) => updateItem(index, "description", e.target.value)}
+                                    placeholder="Descrição do serviço"
+                                    className="h-8 flex-1 rounded-lg bg-white border-zinc-200 text-sm"
+                                />
+                            )}
+                            
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeItem(index)}
+                                className="h-8 w-8 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0"
+                            >
+                                ×
+                            </Button>
+                        </div>
                         
-                        <Input
-                            type="number"
-                            value={item.quantity || ""}
-                            onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 1)}
-                            placeholder="Qtd"
-                            min="1"
-                            className="h-8 w-16 rounded-lg bg-white border-zinc-200 text-sm text-center"
-                        />
-                        <Input
-                            type="number"
-                            value={item.unitPrice || ""}
-                            onChange={(e) => updateItem(index, "unitPrice", parseFloat(e.target.value) || 0)}
-                            placeholder="Valor"
-                            className="h-8 w-24 rounded-lg bg-white border-zinc-200 text-sm"
-                        />
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeItem(index)}
-                            className="h-8 w-8 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-50"
-                        >
-                            ×
-                        </Button>
+                        <div className="flex gap-2 items-center">
+                            <div className="flex items-center gap-1">
+                                <span className="text-xs text-zinc-500 w-12">Qtd:</span>
+                                <button
+                                    type="button"
+                                    onClick={() => updateItem(index, "quantity", Math.max(1, item.quantity - 1))}
+                                    className="w-7 h-7 rounded-lg bg-white border border-zinc-200 text-sm font-medium hover:bg-zinc-100"
+                                >
+                                    −
+                                </button>
+                                <Input
+                                    type="number"
+                                    value={item.quantity}
+                                    onChange={(e) => updateItem(index, "quantity", Math.max(1, parseInt(e.target.value) || 1))}
+                                    className="h-7 w-14 rounded-lg bg-white border-zinc-200 text-sm text-center [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => updateItem(index, "quantity", item.quantity + 1)}
+                                    className="w-7 h-7 rounded-lg bg-white border border-zinc-200 text-sm font-medium hover:bg-zinc-100"
+                                >
+                                    +
+                                </button>
+                            </div>
+                            
+                            <div className="flex items-center gap-1">
+                                <span className="text-xs text-zinc-500 w-16">Valor:</span>
+                                <Input
+                                    type="number"
+                                    value={item.unitPrice}
+                                    onChange={(e) => updateItem(index, "unitPrice", Math.max(0, parseFloat(e.target.value) || 0))}
+                                    placeholder="0,00"
+                                    className="h-7 w-28 rounded-lg bg-white border-zinc-200 text-sm [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                />
+                            </div>
+                            
+                            <div className="ml-auto text-sm font-medium text-zinc-700">
+                                Subtotal: R$ {(item.quantity * item.unitPrice).toFixed(2).replace(".", ",")}
+                            </div>
+                        </div>
                     </div>
                 ))}
 

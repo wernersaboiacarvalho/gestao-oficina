@@ -1,71 +1,133 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<feature name="gestao-oficina-mvp" version="1.0" status="fundacao">
+<feature name="gestao-oficina-mvp" version="2.0" status="mvp_completo">
   
   <resumo>
-    Sistema de Gestão de Oficina - MVP em desenvolvimento.
-    Prisma configurado, auth funcionando, estrutura de pastas ok.
-    Próximo: criar componentes UI e sidebar.
+    Sistema de Gestão de Oficina - MVP completo com CRUD de todas as entidades.
+    Visual Apple-like com fonte Inter, cores zinc, cards rounded-2xl.
+    Todas as Server Actions serializam corretamente Decimal e Date para Client Components.
+    Seed script com dados mock disponíveis.
+    Build passa com sucesso.
   </resumo>
   
   <arquivos_principais>
-    <arquivo path="prisma/schema.prisma">Schema completo com todas as tabelas</arquivo>
+    <arquivo path="prisma/schema.prisma">Schema completo com enum OSStatus incluindo ORCAMENTO</arquivo>
+    <arquivo path="prisma/seed.js">Script de seed com dados mock realistas</arquivo>
+    <arquivo path="src/lib/prisma.ts">Prisma client singleton</arquivo>
     <arquivo path="src/lib/supabase/client.ts">Supabase client-side</arquivo>
     <arquivo path="src/lib/supabase/server.ts">Supabase server-side</arquivo>
-    <arquivo path="src/app/(auth)/login/page.tsx">Página de login</arquivo>
-    <arquivo path="src/app/(dashboard)/dashboard/page.tsx">Dashboard</arquivo>
-    <arquivo path="src/components/ui/button.tsx">Componente Button</arquivo>
     <arquivo path="middleware.ts">Proteção de rotas</arquivo>
   </arquivos_principais>
-  
-  <componentes_faltantes>
-    <componente>Input</componente>
-    <componente>Label</componente>
-    <componente>Card (CardHeader, CardTitle, CardDescription, CardContent)</componente>
-    <componente>Sidebar</componente>
-    <componente>DataTable (para listas)</componente>
-  </componentes_faltantes>
-  
+
+  <arquivos_actions>
+    <arquivo path="src/actions/customers.ts">CRUD de clientes - serializa birthday para ISO string</arquivo>
+    <arquivo path="src/actions/vehicles.ts">CRUD de veículos - deleteVehicle não retorna objeto</arquivo>
+    <arquivo path="src/actions/service-orders.ts">CRUD de OS - serializa totalAmount, quantity, unitPrice com Number()</arquivo>
+    <arquivo path="src/actions/products.ts">CRUD de produtos - serializa costPrice, salePrice com Number()</arquivo>
+    <arquivo path="src/actions/third-parties.ts">CRUD de terceiros - deleteThirdParty não retorna objeto</arquivo>
+    <arquivo path="src/actions/reports.ts">Relatórios - já retorna dados plain (números, não Decimal)</arquivo>
+  </arquivos_actions>
+
+  <arquivos_componentes>
+    <arquivo path="src/components/layout/sidebar.tsx">Sidebar com navegação</arquivo>
+    <arquivo path="src/components/customers/customers-list.tsx">Lista e modal de clientes</arquivo>
+    <arquivo path="src/components/customers/customer-form.tsx">Formulário de cliente</arquivo>
+    <arquivo path="src/components/vehicles/vehicles-list.tsx">Lista e modal de veículos</arquivo>
+    <arquivo path="src/components/vehicles/vehicle-form.tsx">Formulário de veículo</arquivo>
+    <arquivo path="src/components/service-orders/service-orders-list.tsx">Lista, modal e ações de OS</arquivo>
+    <arquivo path="src/components/service-orders/service-order-form.tsx">Formulário de OS com seleção de peças, botões +/- para quantidade, subtotal por item</arquivo>
+    <arquivo path="src/components/products/products-list.tsx">Lista e modal de produtos</arquivo>
+    <arquivo path="src/components/products/product-form.tsx">Formulário de produto</arquivo>
+    <arquivo path="src/components/third-parties/third-parties-list.tsx">Lista e modal de terceiros</arquivo>
+    <arquivo path="src/components/third-parties/third-party-form.tsx">Formulário de terceiro</arquivo>
+    <arquivo path="src/components/pdf/print-preview.tsx">Template de impressão para OS e Orçamento</arquivo>
+    <arquivo path="src/components/reports/report-filters.tsx">Filtros de relatórios</arquivo>
+  </arquivos_componentes>
+
+  <arquivos_ui>
+    <arquivo path="src/components/ui/button.tsx">Componente Button (shadcn)</arquivo>
+    <arquivo path="src/components/ui/input.tsx">Componente Input (shadcn)</arquivo>
+    <arquivo path="src/components/ui/label.tsx">Componente Label (shadcn)</arquivo>
+    <arquivo path="src/components/ui/card.tsx">Componente Card com rounded-2xl</arquivo>
+    <arquivo path="src/components/ui/separator.tsx">Componente Separator</arquivo>
+    <arquivo path="src/components/ui/sheet.tsx">Componente Sheet</arquivo>
+    <arquivo path="src/components/ui/tooltip.tsx">Componente Tooltip</arquivo>
+  </arquivos_ui>
+
   <armadilhas>
     <armadilha severidade="alta">
-      <problema>Schema duplicado</problema>
-      <solucao>Manter apenas prisma/schema.prisma (deletar src/prisma/)</solucao>
+      <problema>Decimal do Prisma não serializa para Client Components</problema>
+      <solucao>Sempre converter com Number() antes de retornar de Server Actions. Campos afetados: totalAmount, quantity, unitPrice, costPrice, salePrice</solucao>
     </armadilha>
     <armadilha severidade="alta">
-      <problema>Versões incompatíveis Prisma</problema>
-      <solucao>Sempre usar mesma versão em prisma e @prisma/client</solucao>
+      <problema>Date do Prisma não serializa para Client Components</problema>
+      <solucao>Sempre converter com .toISOString() antes de retornar de Server Actions. Campo afetado: birthday</solucao>
+    </armadilha>
+    <armadilha severidade="alta">
+      <problema>Server Actions que retornam prisma.Model.delete/update/create diretamente causam erro de serialização</problesa>
+      <solucao>Usar await + variável intermediária, converter campos Decimal/Date, e retornar objeto plain. Para delete que não precisa de retorno, não usar return.</solucao>
     </armadilha>
     <armadilha severidade="media">
-      <problema>Prisma Client sem singleton</problema>
-      <solucao>Criar lib/prisma.ts com singleton pattern</solucao>
+      <problema>Chamar updateItem múltiplas vezes no React não funciona como esperado</problema>
+      <solucao>Agrupar todas as atualizações em uma única chamada de setItems com objeto completo, não chamar updateItem várias vezes seguidas</solucao>
+    </armadilha>
+    <armadilha severidade="media">
+      <problema>Input type="number" tem setas nativas que aparecem como campo extra no Chrome</problema>
+      <solucao>Usar CSS [-moz-appearance:textfield] e [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none</solucao>
+    </armadilha>
+    <armadilha severidade="media">
+      <problema>Vehicle model não tem campo createdAt</problema>
+      <solucao>Não tentar acessar vehicle.createdAt em mapas</solucao>
     </armadilha>
   </armadilhas>
 
+  <padroes_estabelecidos>
+    <padrao>
+      <nome>Serialização de Server Actions</nome>
+      <descricao>Todas as Server Actions que retornam dados do Prisma devem converter Decimal com Number() e Date com toISOString() antes de retornar</descricao>
+      <exemplo>
+        const order = await prisma.serviceOrder.findUnique(...)
+        return { ...order, totalAmount: Number(order.totalAmount), createdAt: order.createdAt.toISOString() }
+      </exemplo>
+    </padrao>
+    <padrao>
+      <nome>Delete sem retorno</nome>
+      <descricao>Para operações de delete que não precisam do objeto deletado no client, não usar return</descricao>
+      <exemplo>await prisma.serviceOrder.delete({ where: { id } })</exemplo>
+    </padrao>
+    <padrao>
+      <nome>Atualização atômica de estado no form</nome>
+      <descricao>Ao atualizar múltiplos campos de um item no form, fazer em uma única operação de setItems</descricao>
+      <exemplo>
+        setItems(prev => {
+          const newItems = [...prev]
+          newItems[index] = { ...newItems[index], field1: val1, field2: val2 }
+          return newItems
+        })
+      </exemplo>
+    </padrao>
+    <padrao>
+      <nome>Páginas de servidor convertem dados antes de passar para client</nome>
+      <descricao>Server components (pages) devem converter Decimal/Date dos dados do Prisma antes de passar como props para Client Components</descricao>
+    </padrao>
+  </padroes_estabelecidos>
+
   <ultimaSessao data="2026-04-06">
     <contexto>
-      Modernizamos o visual para Apple-like:
-      - Fonte Inter configurada
-      - Cores Azul Apple (primary: #0071e3)
-      - Cards com cantos arredondados (rounded-2xl)
-      - Inputs com bg zinco claro
-      - Botões pretos com hover zinco
-      - Backgrounds neutros zinco
-      - Sidebar mais clean
-      - Build passou com sucesso.
+      MVP completo com todas as funcionalidades principais:
+      - CRUD de Clientes, Veículos, Terceiros, Produtos
+      - Ordens de Serviço com Orçamento (ORCAMENTO), aprovação, múltiplos mecânicos
+      - Formulário de OS com seleção de peças do estoque, botões +/- para quantidade, subtotal por item
+      - Relatórios financeiros com totais confiáveis
+      - Preview de impressão para OS e Orçamentos (CSS @media print)
+      - Visual Apple-like (Inter, zinc, rounded-2xl, azul primary)
+      - Seed script com dados mock
+      - Todas as Server Actions serializam corretamente Decimal e Date
+      - Build passa com sucesso
     </contexto>
-    <arquivosModificados>
-      <arquivo>src/app/layout.tsx (fonte Inter)</arquivo>
-      <arquivo>src/app/globals.css (cores Apple-like)</arquivo>
-      <arquivo>src/components/ui/card.tsx (rounded-2xl)</arquivo>
-      <arquivo>src/app/(auth)/login/page.tsx (novo visual)</arquivo>
-      <arquivo>src/app/(auth)/signup/page.tsx (novo visual)</arquivo>
-      <arquivo>src/components/layout/sidebar.tsx (visual clean)</arquivo>
-      <arquivo>src/app/(dashboard)/dashboard/page.tsx (cards modernizados)</arquivo>
-      <arquivo>src/app/(dashboard)/layout.tsx (bg zinco)</arquivo>
-    </arquivosModificados>
     <proximosPassos>
-      <passo prioridade="1">Criar página de Clientes (CRUD)</passo>
-      <passo prioridade="2">Criar página de Veículos</passo>
-      <passo prioridade="3">Criar página de Ordem de Serviço</passo>
+      <passo prioridade="1">Testes manuais completos de todos os fluxos</passo>
+      <passo prioridade="2">Corrigir bugs encontrados nos testes</passo>
+      <passo prioridade="3">Melhorias de UX (busca, paginação, feedback visual)</passo>
     </proximosPassos>
   </ultimaSessao>
 

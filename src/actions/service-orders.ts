@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
 export async function getServiceOrders() {
-    return prisma.serviceOrder.findMany({
+    const orders = await prisma.serviceOrder.findMany({
         include: {
             vehicle: { include: { customer: true } },
             mechanics: { include: { mechanic: true } },
@@ -12,10 +12,22 @@ export async function getServiceOrders() {
         },
         orderBy: { createdAt: "desc" },
     })
+
+    return orders.map((o: any) => ({
+        ...o,
+        totalAmount: Number(o.totalAmount),
+        createdAt: o.createdAt.toISOString(),
+        updatedAt: o.updatedAt.toISOString(),
+        items: (o.items || []).map((i: any) => ({
+            ...i,
+            quantity: Number(i.quantity),
+            unitPrice: Number(i.unitPrice),
+        })),
+    }))
 }
 
 export async function getServiceOrder(id: string) {
-    return prisma.serviceOrder.findUnique({
+    const order = await prisma.serviceOrder.findUnique({
         where: { id },
         include: {
             vehicle: { include: { customer: true } },
@@ -24,6 +36,25 @@ export async function getServiceOrder(id: string) {
             thirdParty: true,
         },
     })
+
+    if (!order) return null
+
+    return {
+        ...order,
+        totalAmount: Number(order.totalAmount),
+        createdAt: order.createdAt.toISOString(),
+        updatedAt: order.updatedAt.toISOString(),
+        items: order.items.map((i: any) => ({
+            ...i,
+            quantity: Number(i.quantity),
+            unitPrice: Number(i.unitPrice),
+            product: i.product ? {
+                ...i.product,
+                costPrice: Number(i.product.costPrice),
+                salePrice: Number(i.product.salePrice),
+            } : null,
+        })),
+    }
 }
 
 export async function createServiceOrder(data: {
@@ -37,7 +68,7 @@ export async function createServiceOrder(data: {
 }) {
     const totalAmount = data.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0)
 
-    return prisma.serviceOrder.create({
+    const order = await prisma.serviceOrder.create({
         data: {
             vehicleId: data.vehicleId,
             status: data.status as any,
@@ -64,6 +95,18 @@ export async function createServiceOrder(data: {
             items: true,
         },
     })
+
+    return {
+        ...order,
+        totalAmount: Number(order.totalAmount),
+        createdAt: order.createdAt.toISOString(),
+        updatedAt: order.updatedAt.toISOString(),
+        items: order.items.map((i: any) => ({
+            ...i,
+            quantity: Number(i.quantity),
+            unitPrice: Number(i.unitPrice),
+        })),
+    }
 }
 
 export async function updateServiceOrder(id: string, data: {
@@ -80,7 +123,7 @@ export async function updateServiceOrder(id: string, data: {
     await prisma.serviceOrderMechanic.deleteMany({ where: { serviceOrderId: id } })
     await prisma.serviceOrderItem.deleteMany({ where: { serviceOrderId: id } })
 
-    return prisma.serviceOrder.update({
+    const order = await prisma.serviceOrder.update({
         where: { id },
         data: {
             vehicleId: data.vehicleId,
@@ -108,10 +151,22 @@ export async function updateServiceOrder(id: string, data: {
             items: true,
         },
     })
+
+    return {
+        ...order,
+        totalAmount: Number(order.totalAmount),
+        createdAt: order.createdAt.toISOString(),
+        updatedAt: order.updatedAt.toISOString(),
+        items: order.items.map((i: any) => ({
+            ...i,
+            quantity: Number(i.quantity),
+            unitPrice: Number(i.unitPrice),
+        })),
+    }
 }
 
 export async function updateServiceOrderStatus(id: string, status: "OPEN" | "IN_PROGRESS" | "WAITING_PARTS_THIRD_PARTY" | "DONE" | "BILLED" | "CANCELLED") {
-    return prisma.serviceOrder.update({
+    await prisma.serviceOrder.update({
         where: { id },
         data: { status },
     })
