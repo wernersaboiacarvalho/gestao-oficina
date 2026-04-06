@@ -5,7 +5,7 @@ export default async function ClientesPage() {
     const customersRaw = await getCustomers()
     const customers = customersRaw.map((c: any) => ({
         ...c,
-        birthday: c.birthday ? c.birthday.toISOString().split("T")[0] : null,
+        birthday: c.birthday ? c.birthday.split("T")[0] : null,
     }))
 
     return (

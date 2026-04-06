@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { revalidatePath } from "next/cache"
 
 export async function getThirdParties() {
     return await prisma.thirdParty.findMany({
@@ -28,6 +29,7 @@ export async function createThirdParty(data: {
             serviceType: data.serviceType || null,
         },
     })
+    revalidatePath("/terceiros")
 }
 
 export async function updateThirdParty(id: string, data: {
@@ -45,10 +47,12 @@ export async function updateThirdParty(id: string, data: {
             serviceType: data.serviceType || null,
         },
     })
+    revalidatePath("/terceiros")
 }
 
 export async function deleteThirdParty(id: string) {
     await prisma.thirdParty.delete({
         where: { id },
     })
+    revalidatePath("/terceiros")
 }
