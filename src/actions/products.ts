@@ -3,15 +3,26 @@
 import { prisma } from "@/lib/prisma"
 
 export async function getProducts() {
-    return prisma.product.findMany({
+    const products = await prisma.product.findMany({
         orderBy: { name: "asc" },
     })
+    return products.map((p: any) => ({
+        ...p,
+        costPrice: Number(p.costPrice),
+        salePrice: Number(p.salePrice),
+    }))
 }
 
 export async function getProduct(id: string) {
-    return prisma.product.findUnique({
+    const product = await prisma.product.findUnique({
         where: { id },
     })
+    if (!product) return null
+    return {
+        ...product,
+        costPrice: Number(product.costPrice),
+        salePrice: Number(product.salePrice),
+    }
 }
 
 export async function createProduct(data: {
@@ -21,7 +32,7 @@ export async function createProduct(data: {
     costPrice: number
     salePrice: number
 }) {
-    return prisma.product.create({
+    const product = await prisma.product.create({
         data: {
             name: data.name,
             code: data.code || null,
@@ -30,6 +41,11 @@ export async function createProduct(data: {
             salePrice: data.salePrice,
         },
     })
+    return {
+        ...product,
+        costPrice: Number(product.costPrice),
+        salePrice: Number(product.salePrice),
+    }
 }
 
 export async function updateProduct(id: string, data: {
@@ -39,7 +55,7 @@ export async function updateProduct(id: string, data: {
     costPrice: number
     salePrice: number
 }) {
-    return prisma.product.update({
+    const product = await prisma.product.update({
         where: { id },
         data: {
             name: data.name,
@@ -49,16 +65,26 @@ export async function updateProduct(id: string, data: {
             salePrice: data.salePrice,
         },
     })
+    return {
+        ...product,
+        costPrice: Number(product.costPrice),
+        salePrice: Number(product.salePrice),
+    }
 }
 
 export async function deleteProduct(id: string) {
-    return prisma.product.delete({
+    const product = await prisma.product.delete({
         where: { id },
     })
+    return {
+        ...product,
+        costPrice: Number(product.costPrice),
+        salePrice: Number(product.salePrice),
+    }
 }
 
 export async function searchProducts(query: string) {
-    return prisma.product.findMany({
+    const products = await prisma.product.findMany({
         where: {
             OR: [
                 { name: { contains: query, mode: "insensitive" } },
@@ -67,13 +93,23 @@ export async function searchProducts(query: string) {
         },
         take: 10,
     })
+    return products.map((p: any) => ({
+        ...p,
+        costPrice: Number(p.costPrice),
+        salePrice: Number(p.salePrice),
+    }))
 }
 
 export async function updateStock(id: string, quantity: number) {
-    return prisma.product.update({
+    const product = await prisma.product.update({
         where: { id },
         data: {
             stockQuantity: { increment: quantity },
         },
     })
+    return {
+        ...product,
+        costPrice: Number(product.costPrice),
+        salePrice: Number(product.salePrice),
+    }
 }

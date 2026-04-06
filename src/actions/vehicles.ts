@@ -4,20 +4,25 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
 export async function getVehicles() {
-    return prisma.vehicle.findMany({
+    const vehicles = await prisma.vehicle.findMany({
         include: { customer: true },
     })
+    return vehicles.map((v: any) => ({
+        ...v,
+    }))
 }
 
 export async function getVehicle(id: string) {
-    return prisma.vehicle.findUnique({
+    const vehicle = await prisma.vehicle.findUnique({
         where: { id },
         include: { customer: true },
     })
+    if (!vehicle) return null
+    return { ...vehicle }
 }
 
 export async function getVehiclesByCustomer(customerId: string) {
-    return prisma.vehicle.findMany({
+    return await prisma.vehicle.findMany({
         where: { customerId },
     })
 }
@@ -31,7 +36,7 @@ export async function createVehicle(data: {
     color?: string
     km?: number
 }) {
-    return prisma.vehicle.create({
+    return await prisma.vehicle.create({
         data: {
             customerId: data.customerId,
             plate: data.plate.toUpperCase(),
@@ -53,7 +58,7 @@ export async function updateVehicle(id: string, data: {
     color?: string
     km?: number
 }) {
-    return prisma.vehicle.update({
+    return await prisma.vehicle.update({
         where: { id },
         data: {
             customerId: data.customerId,
@@ -68,13 +73,13 @@ export async function updateVehicle(id: string, data: {
 }
 
 export async function deleteVehicle(id: string) {
-    return prisma.vehicle.delete({
+    await prisma.vehicle.delete({
         where: { id },
     })
 }
 
 export async function searchVehicles(query: string) {
-    return prisma.vehicle.findMany({
+    const vehicles = await prisma.vehicle.findMany({
         where: {
             OR: [
                 { plate: { contains: query, mode: "insensitive" } },
@@ -85,4 +90,7 @@ export async function searchVehicles(query: string) {
         include: { customer: true },
         take: 10,
     })
+    return vehicles.map((v: any) => ({
+        ...v,
+    }))
 }

@@ -33,14 +33,14 @@ export function CustomersList({ initialCustomers }: CustomersListProps) {
 
     const handleCreate = async (data: { name: string; phone: string; email?: string; document?: string; birthday?: string }) => {
         const newCustomer = await createCustomer(data)
-        setCustomers([{ ...newCustomer, email: newCustomer.email, document: newCustomer.document, birthday: newCustomer.birthday ? newCustomer.birthday.toISOString().split("T")[0] : null }, ...customers])
+        setCustomers([{ ...newCustomer, birthday: newCustomer.birthday ? newCustomer.birthday.split("T")[0] : null }, ...customers])
         setIsModalOpen(false)
     }
 
     const handleUpdate = async (data: { name: string; phone: string; email?: string; document?: string; birthday?: string }) => {
         if (!editingCustomer) return
         const updated = await updateCustomer(editingCustomer.id, data)
-        setCustomers(customers.map((c) => c.id === editingCustomer.id ? { ...updated, email: updated.email, document: updated.document, birthday: updated.birthday ? updated.birthday.toISOString().split("T")[0] : null } : c))
+        setCustomers(customers.map((c) => c.id === editingCustomer.id ? { ...updated, birthday: updated.birthday ? updated.birthday.split("T")[0] : null } : c))
         setEditingCustomer(null)
         setIsModalOpen(false)
     }

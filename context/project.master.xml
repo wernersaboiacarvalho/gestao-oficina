@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project 
   name="GestaoOficina" 
-  version="1.0"
-  lastUpdated="2025-02-16"
+  version="2.0"
+  lastUpdated="2026-04-06"
 >
 
   <!-- ============================================
@@ -60,58 +60,64 @@
        FEATURES E STATUS
        ============================================ -->
   <features>
-    <feature name="auth" status="completo" version="1.0">
+    <feature name="auth" status="completo" version="2.0">
       <description>Login, signup via Supabase</description>
       <routes>
         <route path="/login">Login</route>
+        <route path="/signup">Registro</route>
       </routes>
     </feature>
 
-    <feature name="profiles" status="pendente" version="0.0">
+    <feature name="profiles" status="parcial" version="1.0">
       <description>Gestão de perfis (ADMIN, MECHANIC, USER)</description>
-      <pendente>Criar CRUD de profiles</pendente>
+      <implementado>Perfis usados para seleção de mecânicos em OS</implementado>
+      <pendente>CRUD dedicado de profiles</pendente>
     </feature>
 
-    <feature name="customers" status="pendente" version="0.0">
+    <feature name="customers" status="completo" version="2.0">
       <description>CRUD de clientes</description>
-      <pendente>Criar tela de clientes</pendente>
+      <implementado>Lista com busca, modal de criação/edição, exclusão</implementado>
     </feature>
 
-    <feature name="vehicles" status="pendente" version="0.0">
+    <feature name="vehicles" status="completo" version="2.0">
       <description>CRUD de veículos vinculados a clientes</description>
-      <pendente>Criar tela de veículos</pendente>
+      <implementado>Lista com busca, modal de criação/edição, exclusão</implementado>
     </feature>
 
-    <feature name="service-orders" status="pendente" version="0.0">
+    <feature name="service-orders" status="completo" version="2.0">
       <description>Ordem de Serviço - CORAÇÃO DO SISTEMA</description>
       <capabilities>
         <item>Múltiplos mecânicos desde o início</item>
         <item>Items (peças + serviços) inline</item>
         <item>Edição sem precisar excluir</item>
         <item>Terceirização integrada</item>
-        <item>Status detalhado (OPEN, IN_PROGRESS, WAITING_PARTS_THIRD_PARTY, DONE, BILLED, CANCELLED)</item>
+        <item>Status detalhado (ORCAMENTO, OPEN, IN_PROGRESS, WAITING_PARTS_THIRD_PARTY, DONE, BILLED, CANCELLED)</item>
+        <item>Seleção de peças do estoque com auto-preenchimento de preço</item>
+        <item>Botões +/- para quantidade com subtotal por item</item>
+        <item>Aprovar/rejeitar orçamentos</item>
+        <item>Preview de impressão (PDF) para OS e Orçamentos</item>
+        <item>Filtro por status e busca por placa/cliente/descrição</item>
       </capabilities>
-      <pendente>Criar fluxo completo de OS</pendente>
     </feature>
 
-    <feature name="third-parties" status="pendente" version="0.0">
+    <feature name="third-parties" status="completo" version="2.0">
       <description>CRUD de terceiros (DOR #1)</description>
-      <pendente>Criar gestão de terceiros</pendente>
+      <implementado>Lista com busca, modal de criação/edição, exclusão</implementado>
     </feature>
 
-    <feature name="products" status="pendente" version="0.0">
+    <feature name="products" status="completo" version="2.0">
       <description>Estoque de produtos/peças</description>
-      <pendente>Criar CRUD de produtos</pendente>
+      <implementado>Lista com busca, modal de criação/edição, exclusão, atualização de estoque</implementado>
     </feature>
 
-    <feature name="financial" status="pendente" version="0.0">
+    <feature name="financial" status="completo" version="2.0">
       <description>Controle financeiro (DOR #2)</description>
       <capabilities>
         <item>Dashboard com totais confiáveis</item>
         <item>OS não faturadas</item>
-        <item>Fluxo de caixa</item>
+        <item>Relatórios por status, terceiro e mecânico</item>
+        <item>Filtros por período</item>
       </capabilities>
-      <pendente>Implementar após OS estar pronta</pendente>
     </feature>
 
     <feature name="media" status="futuro" version="0.0">
@@ -170,6 +176,7 @@
         <field name="color" type="String?"/>
         <field name="km" type="Int?"/>
         <relations>serviceOrders</relations>
+        <note>NÃO possui campo createdAt</note>
       </table>
 
       <!-- Ordem de Serviço -->
@@ -235,7 +242,7 @@
 
     <enums>
       <enum name="Role">ADMIN, MECHANIC, USER</enum>
-      <enum name="OSStatus">OPEN, IN_PROGRESS, WAITING_PARTS_THIRD_PARTY, DONE, BILLED, CANCELLED</enum>
+      <enum name="OSStatus">ORCAMENTO, OPEN, IN_PROGRESS, WAITING_PARTS_THIRD_PARTY, DONE, BILLED, CANCELLED</enum>
       <enum name="ItemType">PART, SERVICE</enum>
     </enums>
   </database>
@@ -246,15 +253,47 @@
   <components>
     <section name="Layout">
       <component path="components/layout/sidebar.tsx">Sidebar com navegação</component>
-      <component path="components/layout/header.tsx">Header do dashboard</component>
+      <component path="app/(dashboard)/layout.tsx">Layout do dashboard com sidebar</component>
     </section>
 
     <section name="Auth">
       <component path="app/(auth)/login/page.tsx">Página de login</component>
+      <component path="app/(auth)/signup/page.tsx">Página de registro</component>
     </section>
 
     <section name="Dashboard">
       <component path="app/(dashboard)/dashboard/page.tsx">Dashboard com cards de métricas</component>
+    </section>
+
+    <section name="Clientes">
+      <component path="components/customers/customers-list.tsx">Lista e modal de clientes</component>
+      <component path="components/customers/customer-form.tsx">Formulário de cliente</component>
+    </section>
+
+    <section name="Veículos">
+      <component path="components/vehicles/vehicles-list.tsx">Lista e modal de veículos</component>
+      <component path="components/vehicles/vehicle-form.tsx">Formulário de veículo</component>
+    </section>
+
+    <section name="Ordens de Serviço">
+      <component path="components/service-orders/service-orders-list.tsx">Lista, filtros, modal e ações de OS</component>
+      <component path="components/service-orders/service-order-form.tsx">Formulário com seleção de peças, quantidade +/-, subtotal</component>
+      <component path="components/pdf/print-preview.tsx">Template de impressão para OS e Orçamentos</component>
+    </section>
+
+    <section name="Terceiros">
+      <component path="components/third-parties/third-parties-list.tsx">Lista e modal de terceiros</component>
+      <component path="components/third-parties/third-party-form.tsx">Formulário de terceiro</component>
+    </section>
+
+    <section name="Produtos">
+      <component path="components/products/products-list.tsx">Lista e modal de produtos</component>
+      <component path="components/products/product-form.tsx">Formulário de produto</component>
+    </section>
+
+    <section name="Relatórios">
+      <component path="app/(dashboard)/relatorios/page.tsx">Página de relatórios financeiros</component>
+      <component path="components/reports/report-filters.tsx">Filtros de relatórios</component>
     </section>
   </components>
 
@@ -275,49 +314,101 @@
       </problem>
     </category>
 
-    <category name="Serialização">
+    <category name="Serialização Server → Client">
       <problem>
-        <description>Erro ao passar Decimal para Client</description>
-        <cause>Decimal do Prisma não é Number</cause>
-        <solution>Number(value)</solution>
+        <description>Erro: "Decimal objects are not supported"</description>
+        <cause>Decimal do Prisma não é serializável para Client Components</cause>
+        <solution>Sempre converter com Number() antes de retornar de Server Actions. Campos afetados: totalAmount, quantity, unitPrice, costPrice, salePrice</solution>
+        <exemplo>return { ...order, totalAmount: Number(order.totalAmount) }</exemplo>
       </problem>
       <problem>
         <description>Erro ao passar Date para Client</description>
-        <cause>Date não serializa</cause>
-        <solution>.toISOString()</solution>
+        <cause>Date não serializa nativamente</cause>
+        <solution>Converter com .toISOString() antes de retornar. Campo afetado: birthday</solution>
+      </problem>
+      <problem>
+        <description>Server Action retorna objeto Prisma com Decimal</description>
+        <cause>Usar "return prisma.model.create/update/delete(...)" diretamente</cause>
+        <solution>Usar await + variável intermediária, converter campos, retornar objeto plain. Para delete sem necessidade de retorno, não usar return.</solution>
+      </problem>
+    </category>
+
+    <category name="React State">
+      <problem>
+        <description>Chamar updateItem múltiplas vezes não funciona</description>
+        <cause>React agrupa atualizações de estado, aplicando apenas a última</cause>
+        <solution>Agrupar todas as atualizações em uma única chamada de setItems com objeto completo</solution>
+      </problem>
+    </category>
+
+    <category name="UI">
+      <problem>
+        <description>Input type="number" mostra setas nativas como campo extra no Chrome</description>
+        <cause>Spin buttons nativos do browser</cause>
+        <solution>CSS: [-moz-appearance:textfield] [&amp;::-webkit-outer-spin-button]:appearance-none [&amp;::-webkit-inner-spin-button]:appearance-none</solution>
       </problem>
     </category>
   </troubleshooting>
 
   <!-- ============================================
+       PADRÕES ESTABELECIDOS
+       ============================================ -->
+  <patterns>
+    <pattern name="Serialização de Server Actions">
+      <description>Todas as Server Actions que retornam dados do Prisma devem converter Decimal com Number() e Date com toISOString()</description>
+      <example>
+        const order = await prisma.serviceOrder.findUnique(...)
+        return { ...order, totalAmount: Number(order.totalAmount), createdAt: order.createdAt.toISOString() }
+      </example>
+    </pattern>
+    <pattern name="Delete sem retorno">
+      <description>Para operações de delete que não precisam do objeto deletado no client, não usar return</description>
+      <example>await prisma.serviceOrder.delete({ where: { id } })</example>
+    </pattern>
+    <pattern name="Atualização atômica de estado">
+      <description>Ao atualizar múltiplos campos de um item no form, fazer em uma única operação de setItems</description>
+      <example>
+        setItems(prev => {
+          const newItems = [...prev]
+          newItems[index] = { ...newItems[index], field1: val1, field2: val2 }
+          return newItems
+        })
+      </example>
+    </pattern>
+    <pattern name="Server components convertem antes de passar para client">
+      <description>Páginas server-side devem converter Decimal/Date dos dados do Prisma antes de passar como props para Client Components</description>
+    </pattern>
+  </patterns>
+
+  <!-- ============================================
        PRÓXIMOS PASSOS GLOBAIS
        ============================================ -->
   <roadmap>
-    <milestone name="v1.0 - Fundação" status="em_andamento">
+    <milestone name="v1.0 - Fundação" status="completo">
       <task status="completo">Configurar Prisma Client singleton</task>
-      <task status="pendente">Adicionar componentes UI faltantes</task>
-      <task status="pendente">Criar sidebar com navegação</task>
-      <task status="pendente">Ajustar rotas (redirecionar / para /dashboard)</task>
+      <task status="completo">Adicionar componentes UI (button, input, label, card, separator, sheet, tooltip)</task>
+      <task status="completo">Criar sidebar com navegação</task>
+      <task status="completo">Ajustar rotas (redirecionar / para /dashboard)</task>
+      <task status="completo">Visual Apple-like (Inter, zinc, rounded-2xl)</task>
     </milestone>
-    <milestone name="v2.0 - CRUD Básico" status="pendente">
-      <task>Clientes (cadastro simplificado)</task>
-      <task>Veículos</task>
-      <task>OS COMPLETA (múltiplos mecânicos, edição, poucos cliques)</task>
+    <milestone name="v2.0 - CRUD Básico" status="completo">
+      <task status="completo">Clientes (cadastro simplificado)</task>
+      <task status="completo">Veículos</task>
+      <task status="completo">OS COMPLETA (múltiplos mecânicos, edição, poucos cliques)</task>
+      <task status="completo">Terceiros</task>
+      <task status="completo">Produtos/Estoque</task>
+      <task status="completo">Serialização correta de Decimal e Date em todas as actions</task>
     </milestone>
-    <milestone name="v3.0 - Terceiros" status="pendente">
-      <task>CRUD de Terceiros</task>
-      <task>Vincular OS a terceiros</task>
-      <task>Relatório de terceiros</task>
+    <milestone name="v3.0 - Relatórios e PDF" status="completo">
+      <task status="completo">Relatórios financeiros com totais reais</task>
+      <task status="completo">Preview de impressão para OS e Orçamentos</task>
+      <task status="completo">Filtros por período e status</task>
+      <task status="completo">Seed script com dados mock</task>
     </milestone>
-    <milestone name="v4.0 - Financeiro" status="pendente">
-      <task>Dashboard com totais reais</task>
-      <task>Controle de BILLED vs DONE</task>
-      <task>Relatório de OS não faturadas</task>
-    </milestone>
-    <milestone name="v5.0 - Features Avançadas" status="futuro">
+    <milestone name="v4.0 - Features Avançadas" status="futuro">
       <task>Cloudinary para imagens</task>
       <task>WhatsApp Integration</task>
-      <task>Pós-venda</task>
+      <task>Pós-venda (aniversários, lembretes)</task>
       <task>OCR de NF-e</task>
     </milestone>
   </roadmap>
